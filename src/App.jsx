@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 
@@ -15,6 +15,15 @@ function MainApp() {
   const [sortBy, setSortBy] = useState('default');
   const [searchTerm, setSearchTerm] = useState('');
   const [videoThumbnails, setVideoThumbnails] = useState({});
+
+  // 화면 폭 변화 감지 (모바일 환경 여부)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // 1. 구글 OAuth2 로그인
   const login = useGoogleLogin({
@@ -142,9 +151,9 @@ function MainApp() {
     setSelectedIds(newSelected);
   };
 
-  // 6. 유튜브 채널 페이지 새 탭으로 열기 (선택 이벤트 방지)
+  // 6. 유튜브 채널 페이지 새 탭으로 열기
   const handleOpenChannel = (e, channelId) => {
-    e.stopPropagation(); // 카드 선택(클릭) 이벤트 발생 방지
+    e.stopPropagation();
     window.open(`https://www.youtube.com/channel/${channelId}`, '_blank');
   };
 
@@ -187,7 +196,7 @@ function MainApp() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#121212', color: '#e0e0e0', padding: '28px', fontFamily: "'Pretendard', sans-serif", userSelect: 'none' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#121212', color: '#e0e0e0', padding: isMobile ? '12px' : '28px', fontFamily: "'Pretendard', sans-serif", userSelect: 'none' }}>
       {!accessToken ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh' }}>
           <div style={{ width: '64px', height: '64px', borderRadius: '16px', backgroundColor: '#ff4757', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', marginBottom: '20px', boxShadow: '0 8px 24px rgba(255,71,87,0.3)' }}>
@@ -205,69 +214,67 @@ function MainApp() {
       ) : (
         <>
           {/* 상단 헤더 */}
-          <div style={{ position: 'sticky', top: 0, backgroundColor: 'rgba(18, 18, 18, 0.92)', backdropFilter: 'blur(12px)', zIndex: 10, paddingBottom: '20px', marginBottom: '24px', borderBottom: '1px solid #2a2a2a' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+          <div style={{ position: 'sticky', top: 0, backgroundColor: 'rgba(18, 18, 18, 0.92)', backdropFilter: 'blur(12px)', zIndex: 10, paddingBottom: '16px', marginBottom: '16px', borderBottom: '1px solid #2a2a2a' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
               <div>
-                <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <h1 style={{ fontSize: isMobile ? '18px' : '24px', fontWeight: '800', color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ color: '#ff4757' }}>●</span> 구독 채널 정리 대시보드
                 </h1>
-                <p style={{ fontSize: '13px', color: '#888888', marginTop: '6px', margin: 0 }}>
-                  팁: 채널 카드의 우측 하단 <span style={{ color: '#ff4757', fontWeight: 'bold' }}>↗</span> 버튼을 누르면 해당 유튜브 채널을 새 탭에서 열어볼 수 있습니다.
-                </p>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto', justifyContent: 'flex-end' }}>
                 <button
                   onClick={fetchLatestVideos}
                   disabled={loading}
-                  style={{ padding: '10px 16px', backgroundColor: '#2a2a2a', color: '#2ed573', border: '1px solid #2ed573', borderRadius: '10px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}
+                  style={{ padding: '8px 12px', backgroundColor: '#2a2a2a', color: '#2ed573', border: '1px solid #2ed573', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', flex: isMobile ? '1' : 'none' }}
                 >
-                  🎬 최신 영상 썸네일 로드
+                  🎬 썸네일
                 </button>
                 <button
                   onClick={handleSelectAll}
                   disabled={loading}
-                  style={{ padding: '10px 16px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid #3a3a3a', borderRadius: '10px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}
+                  style={{ padding: '8px 12px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid #3a3a3a', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}
                 >
-                  {selectedIds.size === processedChannels.length ? '전체 해제' : '전체 선택'}
+                  {selectedIds.size === processedChannels.length ? '해제' : '전체선택'}
                 </button>
                 
                 <button
                   onClick={handleUnsubscribeSelected}
                   disabled={selectedIds.size === 0 || loading}
                   style={{
-                    padding: '10px 22px',
-                    borderRadius: '10px',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
                     border: 'none',
                     fontWeight: '700',
-                    fontSize: '13px',
+                    fontSize: '12px',
                     cursor: selectedIds.size > 0 && !loading ? 'pointer' : 'not-allowed',
                     backgroundColor: selectedIds.size > 0 ? '#ff4757' : '#2a2a2a',
                     color: selectedIds.size > 0 ? '#fff' : '#555',
                     boxShadow: selectedIds.size > 0 ? '0 4px 12px rgba(255,71,87,0.3)' : 'none',
                   }}
                 >
-                  {loading ? '처리 중...' : `선택한 ${selectedIds.size}개 구독 취소`}
+                  {loading ? '...' : `취소 (${selectedIds.size})`}
                 </button>
               </div>
             </div>
 
             {/* 필터 및 검색 바 */}
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <input
                 type="text"
-                placeholder="채널 이름 검색..."
+                placeholder="채널 검색..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
-                  padding: '8px 14px',
+                  padding: '8px 12px',
                   backgroundColor: '#1e1e1e',
                   border: '1px solid #333',
                   borderRadius: '8px',
                   color: '#fff',
-                  fontSize: '13px',
+                  fontSize: '12px',
                   outline: 'none',
-                  width: '220px'
+                  flex: isMobile ? '1' : 'none',
+                  width: isMobile ? 'auto' : '200px'
                 }}
               />
 
@@ -275,30 +282,34 @@ function MainApp() {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 style={{
-                  padding: '8px 12px',
+                  padding: '8px 10px',
                   backgroundColor: '#1e1e1e',
                   border: '1px solid #333',
                   borderRadius: '8px',
                   color: '#ccc',
-                  fontSize: '13px',
+                  fontSize: '12px',
                   outline: 'none',
                   cursor: 'pointer'
                 }}
               >
-                <option value="default">정렬: 최신 구독순</option>
-                <option value="name">정렬: 채널 이름순 (가나다)</option>
+                <option value="default">최신순</option>
+                <option value="name">이름순</option>
               </select>
 
-              <div style={{ fontSize: '13px', color: '#888', marginLeft: 'auto' }}>
-                선택됨: <strong style={{ color: '#ff4757' }}>{selectedIds.size}</strong>개 / 전체 {processedChannels.length}개
+              <div style={{ fontSize: '12px', color: '#888', marginLeft: 'auto' }}>
+                <strong style={{ color: '#ff4757' }}>{selectedIds.size}</strong> / {processedChannels.length}개
               </div>
             </div>
           </div>
 
-          {loading && <div style={{ color: '#ff4757', marginBottom: '16px', fontWeight: 'bold', fontSize: '14px' }}>⏳ {loadingMsg}</div>}
+          {loading && <div style={{ color: '#ff4757', marginBottom: '16px', fontWeight: 'bold', fontSize: '13px' }}>⏳ {loadingMsg}</div>}
 
-          {/* 메인 바둑판 (Grid) */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+          {/* 메인 바둑판 (Grid) - 모바일 대응 크기 조정 */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(180px, 1fr))', 
+            gap: isMobile ? '8px' : '16px' 
+          }}>
             {processedChannels.map((channel, index) => {
               const isSelected = selectedIds.has(channel.subscriptionId);
               const latestVideoThumb = videoThumbnails[channel.channelId];
@@ -312,28 +323,26 @@ function MainApp() {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    padding: '16px',
-                    paddingBottom: '28px', // 아래쪽 새 탭 버튼 공간 확보
+                    padding: isMobile ? '10px 8px 24px 8px' : '16px 16px 28px 16px',
                     backgroundColor: isSelected ? '#2c1e21' : '#1e1e1e',
-                    borderRadius: '16px',
+                    borderRadius: '12px',
                     border: isSelected ? '2px solid #ff4757' : '1px solid #2a2a2a',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
-                    boxShadow: isSelected ? '0 4px 16px rgba(255,71,87,0.2)' : 'none'
                   }}
                 >
                   {/* 상단 우측: 체크 아이콘 */}
                   <div style={{
                     position: 'absolute',
-                    top: '10px',
-                    right: '10px',
-                    width: '22px',
-                    height: '22px',
+                    top: '6px',
+                    right: '6px',
+                    width: '18px',
+                    height: '18px',
                     borderRadius: '50%',
                     border: isSelected ? '1px solid #ff4757' : '1px solid #444',
                     backgroundColor: isSelected ? '#ff4757' : 'rgba(0,0,0,0.3)',
                     color: '#fff',
-                    fontSize: '12px',
+                    fontSize: '10px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -343,11 +352,18 @@ function MainApp() {
                   </div>
 
                   {/* 프로필 및 최신 영상 썸네일 영역 */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', width: '100%', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', width: '100%', justifyContent: 'center' }}>
                     <img
                       src={channel.thumbnail}
                       alt={channel.title}
-                      style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #333', pointerEvents: 'none' }}
+                      style={{ 
+                        width: isMobile ? '42px' : '56px', 
+                        height: isMobile ? '42px' : '56px', 
+                        borderRadius: '50%', 
+                        objectFit: 'cover', 
+                        border: '1px solid #333', 
+                        pointerEvents: 'none' 
+                      }}
                     />
 
                     {latestVideoThumb && (
@@ -355,40 +371,42 @@ function MainApp() {
                         <img
                           src={latestVideoThumb}
                           alt="최신 영상"
-                          style={{ width: '80px', height: '45px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #444', pointerEvents: 'none' }}
+                          style={{ 
+                            width: isMobile ? '56px' : '70px', 
+                            height: isMobile ? '32px' : '40px', 
+                            borderRadius: '4px', 
+                            objectFit: 'cover', 
+                            border: '1px solid #444', 
+                            pointerEvents: 'none' 
+                          }}
                         />
-                        <span style={{ position: 'absolute', bottom: '2px', right: '2px', background: 'rgba(0,0,0,0.8)', color: '#2ed573', fontSize: '9px', padding: '1px 3px', borderRadius: '2px', fontWeight: 'bold' }}>NEW</span>
                       </div>
                     )}
                   </div>
 
                   {/* 채널 정보 */}
                   <div style={{ textAlign: 'center', width: '100%', pointerEvents: 'none' }}>
-                    <div style={{ fontWeight: '700', fontSize: '14px', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontWeight: '600', fontSize: isMobile ? '12px' : '14px', color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {channel.title}
                     </div>
                   </div>
 
-                  {/* 하단 우측: 유튜브 채널 바로가기 (새 탭) 버튼 */}
+                  {/* 하단 우측: 유튜브 채널 바로가기 버튼 */}
                   <button
                     onClick={(e) => handleOpenChannel(e, channel.channelId)}
                     title="유튜브 채널 새 탭으로 열기"
                     style={{
                       position: 'absolute',
-                      bottom: '8px',
-                      right: '10px',
+                      bottom: '4px',
+                      right: '6px',
                       background: 'none',
                       border: 'none',
                       color: '#888',
-                      fontSize: '14px',
+                      fontSize: '12px',
                       fontWeight: 'bold',
                       cursor: 'pointer',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      transition: 'all 0.15s'
+                      padding: '2px 4px',
                     }}
-                    onMouseEnter={(e) => e.target.style.color = '#ff4757'}
-                    onMouseLeave={(e) => e.target.style.color = '#888'}
                   >
                     ↗
                   </button>
