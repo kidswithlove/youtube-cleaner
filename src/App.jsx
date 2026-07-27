@@ -15,22 +15,18 @@ function MainApp() {
   const [accessToken, setAccessToken] = useState(null);
   const [channels, setChannels] = useState([]);
   const [selectedIds, setSelectedIds] = useState(new Set());
-  const [protectedIds, setProtectedIds] = useState(new Set()); // 🔒 구독 보호된 채널 ID 세트
+  const [protectedIds, setProtectedIds] = useState(new Set());
   const [lastSelectedIndex, setLastSelectedIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState('');
   
-  // 정렬 및 필터 상태
   const [sortBy, setSortBy] = useState('default');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLang, setSelectedLang] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [filterProtectedOnly, setFilterProtectedOnly] = useState(false);
 
-  // 추가 상세 데이터 (최신 영상 날짜, 카테고리, 언어)
   const [channelDetails, setChannelDetails] = useState({});
-
-  // 화면 폭 감지
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
@@ -39,7 +35,6 @@ function MainApp() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 1. 구글 OAuth2 로그인
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
       setAccessToken(tokenResponse.access_token);
@@ -49,7 +44,6 @@ function MainApp() {
     onError: (error) => alert('로그인 실패: ' + JSON.stringify(error)),
   });
 
-  // 2. 유튜브 구독 목록 가져오기
   const fetchSubscriptions = async (token) => {
     setLoading(true);
     setLoadingMsg('유튜브 구독 목록을 불러오는 중입니다...');
@@ -88,7 +82,6 @@ function MainApp() {
     }
   };
 
-  // 3. 언어 판별
   const detectLanguage = (text) => {
     if (!text) return '기타';
     const koreanRegex = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
@@ -99,7 +92,6 @@ function MainApp() {
     return '영어/기타';
   };
 
-  // 4. 채널 상세 분석
   const analyzeChannels = async () => {
     if (!accessToken || channels.length === 0) return;
     
@@ -169,7 +161,6 @@ function MainApp() {
     setLoading(false);
   };
 
-  // 5. 정렬 및 검색, 필터 처리
   const processedChannels = useMemo(() => {
     let list = [...channels];
 
@@ -208,7 +199,6 @@ function MainApp() {
     return list;
   }, [channels, sortBy, searchTerm, selectedLang, selectedCategory, filterProtectedOnly, protectedIds, channelDetails]);
 
-  // 클릭 선택 처리
   const handleChannelClick = (e, subscriptionId, index) => {
     const newSelected = new Set(selectedIds);
 
@@ -231,7 +221,6 @@ function MainApp() {
     setSelectedIds(newSelected);
   };
 
-  // 🔒 구독 보호(절대 취소 금지) 토글
   const toggleProtectChannel = (e, channelId) => {
     e.stopPropagation();
     const newProtected = new Set(protectedIds);
@@ -239,7 +228,6 @@ function MainApp() {
       newProtected.delete(channelId);
     } else {
       newProtected.add(channelId);
-      // 만약 선택 상태였다면 선택 해제
       const targetSub = channels.find(c => c.channelId === channelId);
       if (targetSub) {
         const newSelected = new Set(selectedIds);
@@ -250,11 +238,8 @@ function MainApp() {
     setProtectedIds(newProtected);
   };
 
-  // 🛡️ 보호된 채널을 '제외'하고 모든 채널 선택하기
   const handleSelectAllExceptProtected = () => {
     const selectable = processedChannels.filter(c => !protectedIds.has(c.channelId));
-    
-    // 이미 보호 제외 전체 선택이 다 되어 있다면 해제
     const allSelectableChosen = selectable.every(c => selectedIds.has(c.subscriptionId));
     
     if (allSelectableChosen && selectable.length > 0) {
@@ -270,7 +255,6 @@ function MainApp() {
     window.open(`https://www.youtube.com/channel/${channelId}`, '_blank');
   };
 
-  // 구독 취소 (보호된 채널 자동 방어)
   const handleUnsubscribeSelected = async () => {
     if (selectedIds.size === 0) return;
 
@@ -301,69 +285,95 @@ function MainApp() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0f0f12', color: '#e0e0e0', padding: isMobile ? '12px' : '28px', fontFamily: "'Pretendard', sans-serif", userSelect: 'none' }}>
+    <div style={{ minHeight: '100vh', width: '100vw', backgroundColor: '#0b0b0e', color: '#e0e0e0', fontFamily: "'Pretendard', sans-serif", userSelect: 'none', margin: 0, padding: 0, boxSizing: 'border-box' }}>
       {!accessToken ? (
-        /* ✨ 화려하고 멋진 스플래시/로그인 화면 */
+        /* ✨ 풀스크린 화려한 메인 로그인 화면 */
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
           alignItems: 'center', 
           justifyContent: 'center', 
-          minHeight: '85vh',
-          background: 'radial-gradient(circle at center, #2a111a 0%, #0f0f12 70%)',
-          borderRadius: '24px',
+          minHeight: '100vh',
+          width: '100vw',
+          background: 'radial-gradient(ellipse at center, #2e0d18 0%, #0d0a12 60%, #050508 100%)',
           padding: '20px',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-          border: '1px solid rgba(255, 71, 87, 0.15)'
+          boxSizing: 'border-box'
         }}>
-          {/* 빛나는 뱃지 */}
+          {/* 상단 네온 배지 */}
           <div style={{
-            padding: '6px 16px',
-            borderRadius: '20px',
-            background: 'rgba(255, 71, 87, 0.15)',
+            padding: '8px 20px',
+            borderRadius: '30px',
+            background: 'rgba(255, 71, 87, 0.12)',
             border: '1px solid rgba(255, 71, 87, 0.4)',
-            color: '#ff4757',
+            color: '#ff6b81',
             fontSize: '13px',
-            fontWeight: '700',
-            marginBottom: '24px',
-            letterSpacing: '1px'
+            fontWeight: '800',
+            marginBottom: '32px',
+            letterSpacing: '1.5px',
+            boxShadow: '0 0 20px rgba(255, 71, 87, 0.2)'
           }}>
             ⚡ SMART YOUTUBE SUBSCRIPTION CLEANER
           </div>
 
-          {/* 대형 글로우 로고 */}
+          {/* 🎨 대형 네온 입체 SVG 그래픽 로고 */}
           <div style={{ 
-            width: '88px', 
-            height: '88px', 
-            borderRadius: '24px', 
-            background: 'linear-gradient(135deg, #ff4757 0%, #ff6b81 100%)', 
+            position: 'relative',
+            width: '120px', 
+            height: '120px', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center', 
-            fontSize: '44px', 
-            marginBottom: '24px', 
-            boxShadow: '0 12px 32px rgba(255, 71, 87, 0.45)',
-            transform: 'scale(1)',
-            transition: 'transform 0.3s'
+            marginBottom: '32px'
           }}>
-            📺
+            {/* 뒤쪽 후광 네온 효과 */}
+            <div style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              borderRadius: '32px',
+              background: 'linear-gradient(135deg, #ff4757, #ff6b81)',
+              filter: 'blur(28px)',
+              opacity: 0.7
+            }}></div>
+
+            {/* 메인 입체 아이콘 상자 */}
+            <div style={{
+              position: 'relative',
+              width: '100px',
+              height: '100px',
+              borderRadius: '28px',
+              background: 'linear-gradient(145deg, #ff4757 0%, #d63031 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 15px 35px rgba(255, 71, 87, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.4)',
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}>
+              {/* 재생 버튼 SVG */}
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="white" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}>
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
           </div>
 
           {/* 메인 타이틀 */}
           <h1 style={{ 
-            fontSize: isMobile ? '28px' : '42px', 
+            fontSize: isMobile ? '32px' : '48px', 
             fontWeight: '900', 
             color: '#ffffff', 
-            marginBottom: '14px',
+            marginBottom: '16px',
             textAlign: 'center',
-            background: 'linear-gradient(to right, #ffffff, #ffa4b0)',
+            lineHeight: '1.2',
+            letterSpacing: '-1px',
+            background: 'linear-gradient(180deg, #ffffff 0%, #ffc2cd 100%)',
             WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
+            WebkitTextFillColor: 'transparent',
+            filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))'
           }}>
             YouTube Subscription Manager
           </h1>
 
-          <p style={{ color: '#a0a0b0', marginBottom: '36px', fontSize: isMobile ? '14px' : '17px', textAlign: 'center', maxWidth: '500px', lineHeight: '1.6' }}>
+          <p style={{ color: '#b0b0c2', marginBottom: '40px', fontSize: isMobile ? '15px' : '18px', textAlign: 'center', maxWidth: '540px', lineHeight: '1.6' }}>
             수백 개의 유튜브 구독 채널, <b>카테고리/언어별 분석</b>부터 <br/>
             <b>🔒 절대 취소 방지 보호 기능</b>까지 한눈에 스마트하게 정리하세요.
           </p>
@@ -375,30 +385,37 @@ function MainApp() {
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
-              padding: '16px 36px', 
+              padding: '18px 40px', 
               background: 'linear-gradient(135deg, #ff4757 0%, #ff2e43 100%)', 
               color: '#fff', 
               border: 'none', 
-              borderRadius: '16px', 
-              fontSize: '17px', 
+              borderRadius: '20px', 
+              fontSize: '18px', 
               fontWeight: '800', 
               cursor: 'pointer', 
-              boxShadow: '0 8px 25px rgba(255, 71, 87, 0.4)', 
+              boxShadow: '0 10px 30px rgba(255, 71, 87, 0.5), 0 0 0 1px rgba(255,255,255,0.2)', 
               transition: 'all 0.25s ease' 
             }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-3px)';
+              e.currentTarget.style.boxShadow = '0 15px 35px rgba(255, 71, 87, 0.7)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 10px 30px rgba(255, 71, 87, 0.5)';
+            }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
               <path d="M21.35 11.1h-9.17v2.73h6.51c-.33 1.76-1.82 3.08-3.78 3.08-2.33 0-4.23-1.9-4.23-4.23s1.9-4.23 4.23-4.23c1.07 0 2.03.39 2.77 1.05l2.05-2.05C18.3 6.13 16.2 5.3 13.9 5.3 9.4 5.3 5.75 8.95 5.75 13.45s3.65 8.15 8.15 8.15c4.7 0 7.8-3.3 7.8-7.9 0-.6-.05-1.15-.35-1.6z"/>
             </svg>
             Google 계정으로 바로 시작하기
           </button>
         </div>
       ) : (
-        <>
-          {/* 상단 헤더 & 컨트롤 레이아웃 */}
-          <div style={{ position: 'sticky', top: 0, backgroundColor: 'rgba(15, 15, 18, 0.95)', backdropFilter: 'blur(16px)', zIndex: 10, paddingBottom: '16px', marginBottom: '16px', borderBottom: '1px solid #222' }}>
+        /* 로그인 후 내부 대시보드 화면 */
+        <div style={{ padding: isMobile ? '12px' : '28px' }}>
+          {/* 상단 컨트롤 영역 */}
+          <div style={{ position: 'sticky', top: 0, backgroundColor: 'rgba(11, 11, 14, 0.95)', backdropFilter: 'blur(16px)', zIndex: 10, paddingBottom: '16px', marginBottom: '16px', borderBottom: '1px solid #222' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
               <div>
                 <h1 style={{ fontSize: isMobile ? '18px' : '22px', fontWeight: '800', color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -406,7 +423,6 @@ function MainApp() {
                 </h1>
               </div>
 
-              {/* 버튼 세트 */}
               <div style={{ display: 'flex', gap: '8px', width: isMobile ? '100%' : 'auto', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                 <button
                   onClick={analyzeChannels}
@@ -463,7 +479,6 @@ function MainApp() {
                 }}
               />
 
-              {/* 정렬 드롭다운 */}
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -475,7 +490,6 @@ function MainApp() {
                 <option value="oldest_video">정렬: 최신 업로드순 (오래된순)</option>
               </select>
 
-              {/* 언어 필터 */}
               <select
                 value={selectedLang}
                 onChange={(e) => setSelectedLang(e.target.value)}
@@ -487,7 +501,6 @@ function MainApp() {
                 <option value="영어/기타">영어/기타</option>
               </select>
 
-              {/* 카테고리 필터 */}
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
@@ -503,7 +516,6 @@ function MainApp() {
                 <option value="기타">기타</option>
               </select>
 
-              {/* 🔒 보호된 채널만 보기 체크박스 */}
               <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', cursor: 'pointer', color: filterProtectedOnly ? '#ff4757' : '#888' }}>
                 <input 
                   type="checkbox" 
@@ -556,7 +568,6 @@ function MainApp() {
                     opacity: isProtected ? 0.95 : 1
                   }}
                 >
-                  {/* 우측 상단: 선택 체크 아이콘 */}
                   <div style={{
                     position: 'absolute',
                     top: '6px',
@@ -576,7 +587,6 @@ function MainApp() {
                     {isSelected && '✓'}
                   </div>
 
-                  {/* 좌측 하단: 🔒 절대 구독 취소 방지 보호 버튼 */}
                   <button
                     onClick={(e) => toggleProtectChannel(e, channel.channelId)}
                     title={isProtected ? "구독 보호 해제" : "이 채널은 절대 구독 취소 안 함 (보호)"}
@@ -596,7 +606,6 @@ function MainApp() {
                     {isProtected ? '🔒' : '🔓'}
                   </button>
 
-                  {/* 프로필 이미지 */}
                   <img
                     src={channel.thumbnail}
                     alt={channel.title}
@@ -611,14 +620,12 @@ function MainApp() {
                     }}
                   />
 
-                  {/* 채널 이름 */}
                   <div style={{ textAlign: 'center', width: '100%', pointerEvents: 'none' }}>
                     <div style={{ fontWeight: '600', fontSize: isMobile ? '12px' : '13px', color: isProtected ? '#ffa4b0' : '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {channel.title}
                     </div>
                   </div>
 
-                  {/* 상세 태그 (분석 완료 시) */}
                   {detail && (
                     <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', fontSize: '10px', color: '#aaa' }}>
                       <div style={{ display: 'flex', gap: '4px' }}>
@@ -633,7 +640,6 @@ function MainApp() {
                     </div>
                   )}
 
-                  {/* 우측 하단: 새 탭 바로가기 버튼 */}
                   <button
                     onClick={(e) => handleOpenChannel(e, channel.channelId)}
                     title="유튜브 채널 새 탭으로 열기"
@@ -656,7 +662,7 @@ function MainApp() {
               );
             })}
           </div>
-        </>
+        </div>
       )}
     </div>
   );
