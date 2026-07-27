@@ -182,3 +182,45 @@
     border-right-color: var(--border);
   }
 }
+
+/* ==========================================
+   모바일 화면 대응 (카드를 2개씩 작은 크기로 배치)
+   ========================================== */
+
+/* 1. 채널 카드들이 들어가는 전체 틀 */
+.grid, .channel-grid, .card-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important; /* 모바일에서 무조건 한 줄에 2개 */
+  gap: 8px !important; /* 카드 사이 간격 줄이기 */
+  padding: 8px !important;
+}
+
+/* 2. 채널 카드 상자 */
+.card, .channel-card {
+  padding: 8px !important;
+  min-width: 0 !important; /* 상자가 너무 커지는 것 방지 */
+}
+
+/* 3. 이미지(프로필/썸네일) 크기 줄이기 */
+.card img, .channel-card img {
+  max-width: 60px !important; /* 이미지 최대 크기를 줄임 */
+  height: auto !important;
+}
+
+/* 4. 글자 크기 줄이기 */
+.card h3, .card p, .channel-card h3, .channel-card p {
+  font-size: 0.8rem !important; /* 글자 크기 축소 */
+  margin: 4px 0 !important;
+}
+
+/* 5. PC 화면에서는 다시 넓고 크게 보여주기 (768px 이상) */
+@media (min-width: 768px) {
+  .grid, .channel-grid, .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+  .card img, .channel-card img {
+    max-width: 100px !important;
+  }
+}
